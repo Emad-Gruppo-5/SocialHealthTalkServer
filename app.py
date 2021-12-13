@@ -53,10 +53,69 @@ def login():
     password = data["password"]
     print("\n COD_FISCALE: " + cod_fiscale + "\nPASSWORD: " + password)
     cursor = db.cursor()
-    query = "SELECT * FROM public.paziente, public.dottore, public.familiare, public.volontario WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
+    query = "SELECT cod_fiscale FROM public.paziente WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
     print(query)
     cursor.execute(query)
     row = cursor.fetchone()
+    if row:
+        token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
+        print(jwt.decode(token, app.config["SECRET_KEY"]))
+        resp = {}
+        resp["role"] =  row['role']
+        resp["token"] = token.decode('utf-8')
+        resp["cod_fiscale"] = row['cod_fiscale']
+        cursor.close()
+        print(json.dumps(resp))
+        return resp
+    else: 
+        query = "SELECT cod_fiscale FROM public.dottore WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
+        print(query)
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if row:
+            token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
+            print(jwt.decode(token, app.config["SECRET_KEY"]))
+            resp = {}
+            resp["role"] =  row['role']
+            resp["token"] = token.decode('utf-8')
+            resp["cod_fiscale"] = row['cod_fiscale']
+            cursor.close()
+            print(json.dumps(resp))
+            return resp
+        else:
+            query = "SELECT cod_fiscale FROM public.volontario WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
+            print(query)
+            cursor.execute(query)
+            row = cursor.fetchone()
+            if row:
+                token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
+                print(jwt.decode(token, app.config["SECRET_KEY"]))
+                resp = {}
+                resp["role"] =  row['role']
+                resp["token"] = token.decode('utf-8')
+                resp["cod_fiscale"] = row['cod_fiscale']
+                cursor.close()
+                print(json.dumps(resp))
+                return resp
+            else:
+                query = "SELECT cod_fiscale FROM public.familiare WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
+                print(query)
+                cursor.execute(query)
+                row = cursor.fetchone()
+                if row:
+                    token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
+                    print(jwt.decode(token, app.config["SECRET_KEY"]))
+                    resp = {}
+                    resp["role"] =  row['role']
+                    resp["token"] = token.decode('utf-8')
+                    resp["cod_fiscale"] = row['cod_fiscale']
+                    cursor.close()
+                    print(json.dumps(resp))
+                    return resp
+                else: 
+                    resp = jsonify('User with cod_fiscale=%s not found', cod_fiscale)
+                    return resp
+
     if row:
         token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
         print(jwt.decode(token, app.config["SECRET_KEY"]))
