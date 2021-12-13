@@ -63,6 +63,7 @@ def login():
         resp = {}
         resp["role"] =  row['role']
         resp["token"] = token.decode('utf-8')
+        resp["cod_fiscale"] = row['cod_fiscale']
         cursor.close()
         print(json.dumps(resp))
         return resp
