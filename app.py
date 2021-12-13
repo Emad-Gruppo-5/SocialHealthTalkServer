@@ -300,7 +300,7 @@ def get_actors():
             return resp
     else:
         try:
-            query = "SELECT u.cod_fiscale, u.nome, u.cognome FROM public." + user + "_paziente as up, public." + user + "as f "
+            query = "SELECT u.cod_fiscale, u.nome, u.cognome FROM public." + user + "_paziente as up, public." + user + "as u "
             query += "WHERE paziente_cod_fiscale='" + data['paziente_cod_fiscale'] + "' AND up." + user + "_cod_fiscale = u.cod_fiscale"
             cursor.execute(query)
             print(query + "\n")
