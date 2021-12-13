@@ -103,14 +103,14 @@ def getlista():
     rows = cursor.fetchall()
     if rows:
         jsonOb = {}
-        resp = {}
+        resp = []
         for row in rows:
             jsonOb["cod_fiscale"] = row[0]
             jsonOb["nome"] = row[1]
             jsonOb["cognome"] = row[2]
-            resp.update(jsonOb)
+            resp.append(jsonOb)
         cursor.close()
-        return resp
+        return json.dumps(resp)
     else:
         resp = jsonify("No user found with role " + str(data['role']))
         return resp
