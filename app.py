@@ -244,9 +244,8 @@ def associa_attore():
     data = request.get_json()
     cursor = db.cursor()
     user = get_role(data['role'])
-    user_cod_fiscale = user + "_cod_fiscale"
     query = "INSERT INTO public." + user + "_paziente (paziente_cod_fiscale, " + user + "_cod_fiscale) "
-    query += "VALUES ('" + data['paziente_cod_fiscale'] + "', '" + data[user_cod_fiscale] + "');"
+    query += "VALUES ('" + data['paziente_cod_fiscale'] + "', '" + data["user_cod_fiscale"] + "');"
 
     print(query)
 
@@ -299,35 +298,50 @@ def get_actors():
     data = request.get_json()
     cursor = db.cursor()
     user = get_role(data['role'])
+    resp = {}
+
+
     if data['role']==1:
         try:
             query_fam = "SELECT f.cod_fiscale, f.nome, f.cognome FROM public.familiare_paziente as fp, public.familiare as f "
-            query_fam += "WHERE paziente_cod_fiscale='" + data['paziente_cod_fiscale'] + "' AND fp.familiare_cod_fiscale = f.cod_fiscale"
-            cursor.execute(query_fam)
+            query_fam += "WHERE paziente_cod_fiscale='" + data['cod_fiscale'] + "' AND fp.familiare_cod_fiscale = f.cod_fiscale;"
             print(query_fam + "\n")
-
-            resp = { "familiari" : cursor.fetchall() }
+            cursor.execute(query_fam)
+            familiari=[]
+            for row in cursor.fetchall():
+                familiariOb = {"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]}
+                familiari.append(familiariOb)
+                
+            print(familiari)
+            resp["familiari"] = familiari 
             
             query_dot = "SELECT d.cod_fiscale, d.nome, d.cognome FROM public.dottore_paziente as dp, public.dottore as d "
-            query_dot += "WHERE paziente_cod_fiscale='" + data['paziente_cod_fiscale'] + "' AND dp.dottore_cod_fiscale = d.cod_fiscale"
+            query_dot += "WHERE paziente_cod_fiscale='" + data['cod_fiscale'] + "' AND dp.dottore_cod_fiscale = d.cod_fiscale;"
+            print(query_dot + "\n")
             cursor.execute(query_dot)
-            
-            resp.update({ "dottori": cursor.fetchall()})
-
+            dottori=[]
+            for row in cursor.fetchall():
+                dottoriOb = {"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]}
+                dottori.append(dottoriOb)
+            resp["dottori"] = dottori
+            print(resp)
             
         except psycopg2.IntegrityError as e:
             resp = jsonify('Error: Select not done - ', str(e))
         finally:
             cursor.close()
-            return resp
+            return json.dumps(resp)
     else:
         try:
-            query = "SELECT u.cod_fiscale, u.nome, u.cognome FROM public." + user + "_paziente as up, public." + user + "as u "
-            query += "WHERE paziente_cod_fiscale='" + data['paziente_cod_fiscale'] + "' AND up." + user + "_cod_fiscale = u.cod_fiscale"
+            query = "SELECT p.cod_fiscale, p.nome, p.cognome FROM public." + user + "_paziente as up, public.paziente as p "
+            query += "WHERE up." + user + "_cod_fiscale='" + data['cod_fiscale'] + "' AND up.paziente_cod_fiscale=p.cod_fiscale;"
             cursor.execute(query)
             print(query + "\n")
-            resp = cursor.fetchall()
-
+            pazienti = []
+            for row in cursor.fetchall():
+                respOb = { "cod_fiscale": row[0], "nome": row[1], "cognome": row[2]}
+                pazienti.append(respOb)
+            resp["pazienti"] = pazienti
         except psycopg2.IntegrityError as e:
             resp = jsonify('Error: Select not done - ', str(e))
 
