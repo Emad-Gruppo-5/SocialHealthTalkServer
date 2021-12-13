@@ -19,13 +19,13 @@ db = psycopg2.connect(dbname='mydb', user='postgres', host='localhost', password
 app.config["SECRET_KEY"] = "secretkey"
 
 def get_role(x):
-    if x==1:
+    if x==1 or x=='1':
         user='paziente'
-    elif x==2:
+    elif x==2 or x=='2':
         user='dottore'
-    elif x==3:
+    elif x==3 or x=='3':
         user='volontario'
-    elif x==4:
+    elif x==4 or x=='4':
         user='familiare'
     return user
 
@@ -48,7 +48,7 @@ def token_required(f):
 @app.route("/login", methods=['POST'])
 def login():
     data = request.get_json()
-    
+
     role=1
     row=None
     print("\n\nDATI:\n" + str(data))
@@ -95,22 +95,24 @@ def login():
 #@token_required
 def getlista():
     data = request.get_json()
+    print(data)
     user = get_role(data['role'])
     cursor = db.cursor()
     query = "SELECT cod_fiscale, nome, cognome FROM public." + user + ";"
     print(query)
     cursor.execute(query)
     rows = cursor.fetchall()
+    print(rows)
     if rows:
         jsonOb = {}
-        resp = {}
+        resp = []
         for row in rows:
             jsonOb["cod_fiscale"] = row[0]
             jsonOb["nome"] = row[1]
             jsonOb["cognome"] = row[2]
-            resp.update(jsonOb)
+            resp = resp[:] + [jsonOb]
         cursor.close()
-        return resp
+        return json.dumps(resp)
     else:
         resp = jsonify("No user found with role " + str(data['role']))
         return resp
@@ -152,22 +154,22 @@ def create_user():
     print(data)
     print("\n")
     if data['role']==1: #PAZIENTE [1]
-        query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat) VALUES ('"
+        query+= data["cod_fiscale"] + "', 'admin', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
         query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ");"
     elif data['role']==2: #DOTTORE [2]
-        query = "INSERT INTO public.dottore (cod_fiscale, password, role, nome, cognome, num_cellulare, email, specializzazione) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query = "INSERT INTO public.dottore (cod_fiscale, password, role, nome, cognome, num_cellulare, email, specializzazione) VALUES ('"
+        query+= data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
         query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', '" + data["specializzazione"] + "');"
     elif data['role']==3: #VOLONTARIO [3]
-        query = "INSERT INTO public.volontario (cod_fiscale, password, role, nome, cognome, num_cellulare, email, ammonizioni) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(3) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query = "INSERT INTO public.volontario (cod_fiscale, password, role, nome, cognome, num_cellulare, email, ammonizioni) VALUES ('"
+        query+= data["cod_fiscale"] + "', 'admin', " + str(3) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
         query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(0) + ");"
     elif data['role']==4: #FAMILIARE [4]
-        query = "INSERT INTO public.familiare (cod_fiscale, password, role, nome, cognome, num_cellulare, email) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(4) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query = "INSERT INTO public.familiare (cod_fiscale, password, role, nome, cognome, num_cellulare, email) VALUES ('"
+        query+= data["cod_fiscale"] + "', 'admin', " + str(4) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
         query+= str(data["num_cellulare"]) + ", '" + data["email"] + "');"
-    print("\n")    
+    print("\n")
 
     print(query)
 
@@ -180,7 +182,7 @@ def create_user():
     finally:
         cursor.close()
     return status
-    
+
 # Elimina utente. Importante passare codice fiscale e role giusti per costruire la query corretta
 # PARAMETRI DA PASSARE: - role, - cod_fiscale
 @app.route("/admin/elimina_utente", methods = ['POST'])
@@ -213,14 +215,14 @@ def update_user():
     print(data)
     print("\n")
 
-    query = "UPDATE public." + user + " SET num_cellulare=" + str(data["num_cellulare"]) + ", email='" + data["email"] + "'"  
+    query = "UPDATE public." + user + " SET num_cellulare=" + str(data["num_cellulare"]) + ", email='" + data["email"] + "'"
 
     if data['role']==1: #PAZIENTE [1]
-        query += ", tipologia_chat=" + str(data["tipologia_chat"]) 
-    
+        query += ", tipologia_chat=" + str(data["tipologia_chat"])
+
     query += " WHERE cod_fiscale='" + data['cod_fiscale'] + "';"
-    
-    print("\n")    
+
+    print("\n")
 
     print(query)
 
@@ -259,7 +261,7 @@ def associa_attore():
     finally:
         cursor.close()
     return status
-    
+
 # Rimuovi associazione attore_paziente
 # PARAMETRI DA PASSARE: - role(NON DEL PAZIENTE), - user_cod_fiscale(NON DEL PAZIENTE), - paziente_cod_fiscale
 @app.route("/admin/rimuovi_associazione", methods = ['POST'])
@@ -307,14 +309,14 @@ def get_actors():
             print(query_fam + "\n")
 
             resp = { "familiari" : cursor.fetchall() }
-            
+
             query_dot = "SELECT d.cod_fiscale, d.nome, d.cognome FROM public.dottore_paziente as dp, public.dottore as d "
             query_dot += "WHERE paziente_cod_fiscale='" + data['paziente_cod_fiscale'] + "' AND dp.dottore_cod_fiscale = d.cod_fiscale"
             cursor.execute(query_dot)
-            
+
             resp.update({ "dottori": cursor.fetchall()})
 
-            
+
         except psycopg2.IntegrityError as e:
             resp = jsonify('Error: Select not done - ', str(e))
         finally:
