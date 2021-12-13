@@ -16,7 +16,7 @@ import psycopg2
 app = Flask(__name__)
 
 db = psycopg2.connect(dbname='mydb', user='postgres', host='localhost', password='root')
-
+app.config["SECRET_KEY"] = "secretkey"
 
 def get_role(x):
     if x==1:
@@ -48,87 +48,37 @@ def token_required(f):
 @app.route("/login", methods=['POST'])
 def login():
     data = request.get_json()
+    
+    role=1
+    row=None
     print("\n\nDATI:\n" + str(data))
     cod_fiscale = data["cod_fiscale"]
     password = data["password"]
     print("\n COD_FISCALE: " + cod_fiscale + "\nPASSWORD: " + password)
     cursor = db.cursor()
-    query = "SELECT cod_fiscale FROM public.paziente WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
-    print(query)
-    cursor.execute(query)
-    row = cursor.fetchone()
-    if row:
-        token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
-        print(jwt.decode(token, app.config["SECRET_KEY"]))
-        resp = {}
-        resp["role"] =  row['role']
-        resp["token"] = token.decode('utf-8')
-        resp["cod_fiscale"] = row['cod_fiscale']
-        cursor.close()
-        print(json.dumps(resp))
-        return resp
-    else: 
-        query = "SELECT cod_fiscale FROM public.dottore WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
+
+    while not row:
+        user = get_role(role)
+        query = "SELECT * FROM public." + user + " WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
         print(query)
         cursor.execute(query)
         row = cursor.fetchone()
+        print("\nROW:\n",row)
+        role+=1
         if row:
             token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
             print(jwt.decode(token, app.config["SECRET_KEY"]))
             resp = {}
-            resp["role"] =  row['role']
+            resp["role"] =  row[2]
             resp["token"] = token.decode('utf-8')
-            resp["cod_fiscale"] = row['cod_fiscale']
+            resp["cod_fiscale"] = row[0]
             cursor.close()
             print(json.dumps(resp))
             return resp
-        else:
-            query = "SELECT cod_fiscale FROM public.volontario WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
-            print(query)
-            cursor.execute(query)
-            row = cursor.fetchone()
-            if row:
-                token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
-                print(jwt.decode(token, app.config["SECRET_KEY"]))
-                resp = {}
-                resp["role"] =  row['role']
-                resp["token"] = token.decode('utf-8')
-                resp["cod_fiscale"] = row['cod_fiscale']
-                cursor.close()
-                print(json.dumps(resp))
-                return resp
-            else:
-                query = "SELECT cod_fiscale FROM public.familiare WHERE cod_fiscale='" + cod_fiscale + "' AND password='" + password + "';"
-                print(query)
-                cursor.execute(query)
-                row = cursor.fetchone()
-                if row:
-                    token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
-                    print(jwt.decode(token, app.config["SECRET_KEY"]))
-                    resp = {}
-                    resp["role"] =  row['role']
-                    resp["token"] = token.decode('utf-8')
-                    resp["cod_fiscale"] = row['cod_fiscale']
-                    cursor.close()
-                    print(json.dumps(resp))
-                    return resp
-                else: 
-                    resp = jsonify('User with cod_fiscale=%s not found', cod_fiscale)
-                    return resp
-
-    if row:
-        token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
-        print(jwt.decode(token, app.config["SECRET_KEY"]))
-        resp = {}
-        resp["role"] =  row['role']
-        resp["token"] = token.decode('utf-8')
-        resp["cod_fiscale"] = row['cod_fiscale']
-        cursor.close()
-        print(json.dumps(resp))
-        return resp
-    else:
-        resp = jsonify('User with cod_fiscale=%s not found', cod_fiscale)
-        return resp
+        elif role==5:
+            resp = jsonify('User with cod_fiscale=%s not found', cod_fiscale)
+            cursor.close()
+            return resp
 
 
 #############################################################
@@ -152,7 +102,13 @@ def getlista():
     cursor.execute(query)
     rows = cursor.fetchall()
     if rows:
-        resp = json.dumps(rows)
+        jsonOb = {}
+        resp = {}
+        for row in rows:
+            jsonOb["cod_fiscale"] = row[0]
+            jsonOb["nome"] = row[1]
+            jsonOb["cognome"] = row[2]
+            resp.update(jsonOb)
         cursor.close()
         return resp
     else:
@@ -170,9 +126,15 @@ def getprofilo():
     query = "SELECT * FROM public." + user + " WHERE cod_fiscale='" + data['cod_fiscale'] + "';"
     print(query)
     cursor.execute(query)
-    rows = cursor.fetchall()
+    rows = cursor.fetchone()
     if rows:
-        resp = json.dumps(rows)
+        resp = { "cod_fiscale": rows[0], "role": str(rows[2]), "nome": rows[3], "cognome":rows[4], "num_cellulare":rows[5], "email":rows[6]}
+        if data['role']==1:
+            resp["tipologia_chat"] = rows[7]
+        elif data['role']==2:
+            resp["specializzazione"] = rows[7]
+        elif data['role']==3:
+            resp["ammonizioni"] = rows[7]
         cursor.close()
         return resp
     else:
