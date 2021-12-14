@@ -105,10 +105,9 @@ def getlista():
         jsonOb = {}
         resp = []
         for row in rows:
-            jsonOb["cod_fiscale"] = row[0]
-            jsonOb["nome"] = row[1]
-            jsonOb["cognome"] = row[2]
-            resp.append(jsonOb)
+            print(row)
+            resp.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
+            print(resp)
         cursor.close()
         return json.dumps(resp)
     else:
