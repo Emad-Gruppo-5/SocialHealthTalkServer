@@ -308,8 +308,7 @@ def get_actors():
             cursor.execute(query_fam)
             familiari=[]
             for row in cursor.fetchall():
-                familiariOb = {"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]}
-                familiari.append(familiariOb)
+                familiari.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
                 
             print(familiari)
             resp["familiari"] = familiari 
@@ -320,8 +319,7 @@ def get_actors():
             cursor.execute(query_dot)
             dottori=[]
             for row in cursor.fetchall():
-                dottoriOb = {"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]}
-                dottori.append(dottoriOb)
+                dottori.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
             resp["dottori"] = dottori
             print(resp)
             
@@ -338,8 +336,7 @@ def get_actors():
             print(query + "\n")
             pazienti = []
             for row in cursor.fetchall():
-                respOb = { "cod_fiscale": row[0], "nome": row[1], "cognome": row[2]}
-                pazienti.append(respOb)
+                pazienti.append({ "cod_fiscale": row[0], "nome": row[1], "cognome": row[2]})
             resp["pazienti"] = pazienti
         except psycopg2.IntegrityError as e:
             resp = jsonify('Error: Select not done - ', str(e))
