@@ -102,12 +102,9 @@ def getlista():
     cursor.execute(query)
     rows = cursor.fetchall()
     if rows:
-        jsonOb = {}
         resp = []
         for row in rows:
-            print(row)
             resp.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
-            print(resp)
         cursor.close()
         return json.dumps(resp)
     else:
@@ -348,11 +345,12 @@ def get_actors():
 
 
 
-# @app.route("/")
-# def prova():
-#     cursor = db.cursor()
-#     cursor.execute("SELECT * FROM public.paziente")
-#     rows = cursor.fetchall()
-#     print(rows)
-#     return json.dumps(rows)
+@app.route("/", methods=['GET'])
+def prova():
+    return '''ALERT ALERT ALERT ALERT ALERT\n
+            ALERT ALERT ALERT ALERT ALERT\n
+            ALERT ALERT ALERT ALERT ALERT\n
+            ALERT ALERT ALERT ALERT ALERT\n
+            ALERT ALERT ALERT ALERT ALERT\n'''
+            
 
