@@ -69,9 +69,14 @@ def login():
             token = jwt.encode({'cod_fiscale' : cod_fiscale}, app.config['SECRET_KEY'], algorithm="HS256")
             print(jwt.decode(token, app.config["SECRET_KEY"]))
             resp = {}
-            resp["role"] =  row[2]
-            resp["token"] = token.decode('utf-8')
             resp["cod_fiscale"] = row[0]
+            resp["role"] =  row[2]
+            resp["nome"] = row[3]
+            resp["cognome"] = row[4]
+            resp["num_cellulare"] = row[5]
+            resp["email"] = row[6]
+            resp["tipologia_chat"] = row[7]
+            resp["token"] = token.decode('utf-8')
             cursor.close()
             print(json.dumps(resp))
             return resp
@@ -91,7 +96,7 @@ def login():
 # Restituisce la lista degli utenti associati al ruolo passato. 
 # Importante passare il ruolo giusto per costruire la query corretta.
 # PARAMETRI DA PASSARE: - role
-@app.route("/admin/lista_attori", methods = ['POST'])
+@app.route("/lista_attori", methods = ['POST'])
 #@token_required
 def getlista():
     data = request.get_json()
@@ -113,7 +118,7 @@ def getlista():
 
 # Restituisce dati profilo
 # PARAMETRI DA PASSARE: - role, - cod_fiscale
-@app.route("/admin/dati_profilo", methods = ['POST'])
+@app.route("/dati_profilo", methods = ['POST'])
 #@token_required
 def getprofilo():
     data = request.get_json()
@@ -139,7 +144,7 @@ def getprofilo():
 
 
 # Crea utente. Importante passare il ruolo giusto per costruire la query corretta
-@app.route("/admin/crea_utente", methods = ['POST'])
+@app.route("/crea_utente", methods = ['POST'])
 #@token_required
 def create_user():
     data = request.get_json()
@@ -179,7 +184,7 @@ def create_user():
     
 # Elimina utente. Importante passare codice fiscale e role giusti per costruire la query corretta
 # PARAMETRI DA PASSARE: - role, - cod_fiscale
-@app.route("/admin/elimina_utente", methods = ['POST'])
+@app.route("/elimina_utente", methods = ['POST'])
 #@token_required
 def delete_user():
     data = request.get_json()
@@ -199,7 +204,7 @@ def delete_user():
 
 # Modifica utente. Importante passare il ruolo giusto per costruire la query corretta
 # PARAMETRI DA PASSARE: - role, - cod_fiscale, - num_cellulare, - email, ?- tipologia_chat
-@app.route("/admin/modifica_utente", methods = ['POST'])
+@app.route("/modifica_utente", methods = ['POST'])
 #@token_required
 def update_user():
     data = request.get_json()
@@ -234,7 +239,7 @@ def update_user():
 # senso ha dare la possibilità di associare ambo i lati? Lato paziente
 # ci sarà solo la visualizzazione dei familiari/dottori associati
 # PARAMETRI DA PASSARE: - role(NON DEL PAZIENTE), - user_cod_fiscale(NON DEL PAZIENTE), - paziente_cod_fiscale
-@app.route("/admin/associa_attore", methods = ['POST'])
+@app.route("/associa_attore", methods = ['POST'])
 #@token_required
 def associa_attore():
     data = request.get_json()
@@ -257,7 +262,7 @@ def associa_attore():
     
 # Rimuovi associazione attore_paziente
 # PARAMETRI DA PASSARE: - role(NON DEL PAZIENTE), - user_cod_fiscale(NON DEL PAZIENTE), - paziente_cod_fiscale
-@app.route("/admin/rimuovi_associazione", methods = ['POST'])
+@app.route("/rimuovi_associazione", methods = ['POST'])
 #@token_required
 def rimuovi_associazione():
     data = request.get_json()
@@ -288,7 +293,7 @@ def rimuovi_associazione():
 # - Pazienti: Resituisce Familiari e Dottori associati
 # - Dottori/Familiari/Volontari : Restituisce Pazienti associati
 # PARAMETRI DA PASSARE: - role, - paziente_cod_fiscale
-@app.route("/admin/attori_associati", methods=['POST'])
+@app.route("/attori_associati", methods=['POST'])
 #@token_required
 def get_actors():
     data = request.get_json()
@@ -345,7 +350,7 @@ def get_actors():
 
 
 
-@app.route("/", methods=['GET'])
+@app.route("/timeout", methods=['GET'])
 def prova():
     return '''ALERT ALERT ALERT ALERT ALERT\n
             ALERT ALERT ALERT ALERT ALERT\n
