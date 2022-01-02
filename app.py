@@ -195,9 +195,9 @@ def delete_user():
     try:
         cursor.execute("DELETE FROM public." + user + " WHERE cod_fiscale='" + data["cod_fiscale"] + "';")
         db.commit()
-        status = jsonify('User deleted')
+        status = jsonify({"statusCode" : 200, "body": 'User deleted'})
     except psycopg2.IntegrityError as e:
-        status = jsonify('Error: User not deleted - ', str(e))
+        status = jsonify({"statusCode" : 500, "body" : 'Error: User not deleted - ' + str(e)})
     finally:
         cursor.close()
     return status
