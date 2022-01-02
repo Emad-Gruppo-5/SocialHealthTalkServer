@@ -27,6 +27,8 @@ def get_role(x):
         user='volontario'
     elif x==4:
         user='familiare'
+    else:
+        user = 'no role'
     return user
 
 # Token Check
@@ -101,6 +103,9 @@ def login():
 def getlista():
     data = request.get_json()
     user = get_role(data['role'])
+    if user == 'no role':
+        resp = jsonify("role " + str(data['role']) + " doesn't exist")
+        return resp
     cursor = db.cursor()
     query = "SELECT cod_fiscale, nome, cognome FROM public." + user + ";"
     print(query)
@@ -152,23 +157,22 @@ def create_user():
     print("\n")
     print(data)
     print("\n")
-    if data['role']=='1': #PAZIENTE [1]
+    if data['role'] == 1: #PAZIENTE [1]
         query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
-        query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ");"
-    elif data['role']=='2': #DOTTORE [2]
+        query += data["cod_fiscale"] + "', 'admin', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ");"
+    elif data['role'] == 2: #DOTTORE [2]
         query = "INSERT INTO public.dottore (cod_fiscale, password, role, nome, cognome, num_cellulare, email, specializzazione) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
-        query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', '" + data["specializzazione"] + "');"
-    elif data['role']=='3': #VOLONTARIO [3]
+        query += data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query += str(data["num_cellulare"]) + ", '" + data["email"] + "', '" + data["specializzazione"] + "');"
+    elif data['role'] == 3: #VOLONTARIO [3]
         query = "INSERT INTO public.volontario (cod_fiscale, password, role, nome, cognome, num_cellulare, email, ammonizioni) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(3) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
-        query+= str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(0) + ");"
-    elif data['role']=='4': #FAMILIARE [4]
+        query += data["cod_fiscale"] + "', 'admin', " + str(3) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(0) + ");"
+    elif data['role'] == 4: #FAMILIARE [4]
         query = "INSERT INTO public.familiare (cod_fiscale, password, role, nome, cognome, num_cellulare, email) VALUES ('" 
-        query+= data["cod_fiscale"] + "', 'admin', " + str(4) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
-        query+= str(data["num_cellulare"]) + ", '" + data["email"] + "');"
-    print("\n")    
+        query += data["cod_fiscale"] + "', 'admin', " + str(4) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
+        query += str(data["num_cellulare"]) + ", '" + data["email"] + "');"  
 
     print(query)
 
@@ -176,7 +180,7 @@ def create_user():
         cursor.execute(query)
         db.commit()
         status = jsonify({"statusCode" : 200, "body": 'User inserted'})
-    except psycopg2.IntegrityError as e:
+    except psycopg2.errors.UniqueViolation as e:
         status = jsonify({"statusCode" : 500, "body" : 'Error: User not inserted - ' + str(e)})
     finally:
         cursor.close()
