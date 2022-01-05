@@ -77,15 +77,18 @@ def login():
             resp["cognome"] = row[4]
             resp["num_cellulare"] = row[5]
             resp["email"] = row[6]
-            resp["tipologia_chat"] = row[7]
+            if row[2] == 1:
+                resp["tipologia_chat"] = row[7]
+            elif row[2] == 2:
+                resp["specializzazione"] = row[7]
             resp["token"] = token.decode('utf-8')
             cursor.close()
             print(json.dumps(resp))
-            return resp
+            return make_response(resp, 200)
         elif role==5:
-            resp = jsonify('User with cod_fiscale=%s not found', cod_fiscale)
+            resp = jsonify('User with cod_fiscale=' + cod_fiscale + ' not found')
             cursor.close()
-            return resp
+            return make_response(resp, 500)
 
 
 #############################################################
@@ -134,7 +137,7 @@ def getprofilo():
     cursor.execute(query)
     rows = cursor.fetchone()
     if rows:
-        resp = { "cod_fiscale": rows[0], "role": str(rows[2]), "nome": rows[3], "cognome":rows[4], "num_cellulare":rows[5], "email":rows[6]}
+        resp = { "cod_fiscale": rows[0], "role": str(rows[2]), "nome": rows[3], "cognome":rows[4], "num_cellulare": str(rows[5]), "email":rows[6]}
         if data['role']==1:
             resp["tipologia_chat"] = rows[7]
         elif data['role']==2:
@@ -351,15 +354,142 @@ def get_actors():
             cursor.close()
             return resp
 
+# Crea una visita.
+@app.route("/dottore/crea_visita", methods=['POST'])
+# @token_required
+def create_visita():
+    data = request.get_json()
+    cursor = db.cursor()
+    print("\n")
+    print(data)
+    print("\n")
+    query = "INSERT INTO public.visite (\"id visita\", ora, notifica, data, cod_fiscale_doc, cod_fiscale_pat) VALUES ('"
+    query += data["id"] + "', '" + data["ora"] + "', '" + data["notifica"] + "', '" + data["data"] + "', '" + data[
+        "cfdottore"] + "', '" + data["cfpaziente"] + "');"
+
+    print("\n")
+
+    print(query)
+
+    try:
+        cursor.execute(query)
+        db.commit()
+        status = jsonify('User inserted')
+    except psycopg2.IntegrityError as e:
+        status = jsonify('Error: User not inserted - ', str(e))
+    finally:
+        cursor.close()
+    return status
 
 
+# Restituisce la lista delle visite associati al paziente.
+# PARAMETRI DA PASSARE: - paziente_cod_fiscare
+@app.route("/paziente/getvisite", methods=['POST'])
+# @token_required
+def getvisite():
+    data = request.get_json()
+    cursor = db.cursor()
+    try:
+        query_fam = "SELECT v.\"id visita\", v.nome, v.cognome FROM public.visita_paziente as vp, public.visita as v "
+        query_fam += "WHERE paziente_cod_fiscale='" + data[
+            'paziente_cod_fiscale'] + "' AND vp.\"id visita\" = v.\"id visita\""
+        cursor.execute(query_fam)
+        print(query_fam + "\n")
 
-@app.route("/timeout", methods=['GET'])
-def prova():
-    return '''ALERT ALERT ALERT ALERT ALERT\n
-            ALERT ALERT ALERT ALERT ALERT\n
-            ALERT ALERT ALERT ALERT ALERT\n
-            ALERT ALERT ALERT ALERT ALERT\n
-            ALERT ALERT ALERT ALERT ALERT\n'''
-            
+        resp = {"visite": cursor.fetchall()}
 
+    except psycopg2.IntegrityError as e:
+        resp = jsonify('Error: Select not done - ', str(e))
+    finally:
+        cursor.close()
+        return resp
+
+
+# Crea domanda per paziente.
+# PARAMETRI DA PASSARE: - quesito, - id_domanda, - ora, - ripeti, - data, - paz_cod_fiscale, - dot_cod_fiscale
+@app.route("/dottore/crea_domanda", methods = ['POST'])
+#@token_required
+def create_question():
+   data = request.get_json()
+   cursor = db.cursor()
+   print(data)
+   print("\n")
+ 
+   query = "INSERT INTO public.domande (quesito, id_domanda, ora, ripeti, data, paz_cod_fiscale, dot_cod_fiscale) VALUES ('"
+   query+= data["quesito"] + "', '" + data["id_domanda"] + "', '" + data["ora"] + "', '"
+   query+= data["ripeti"] + "' , '" + data["data"] + "' , '" + data["paz_cod_fiscale"] + "' , '" + data["dot_cod_fiscale"] + "' ); "
+ 
+   print("\n")   
+ 
+   print(query)
+ 
+   try:
+       cursor.execute(query)
+       db.commit()
+       status = jsonify('domanda inserita')
+   except psycopg2.IntegrityError as e:
+       status = jsonify('Error: domanda not inserted - ', str(e))
+   finally:
+       cursor.close()
+   return status
+ 
+ 
+ 
+ 
+# Rispondi domanda.
+# PARAMETRI DA PASSARE: - id_domanda, - risposta
+@app.route("/paziente/rispondi_domanda", methods = ['POST'])
+#@token_required
+def ask_askwer():
+   data = request.get_json()
+   cursor = db.cursor()
+ 
+   print("\n")
+   print(data)
+   print("\n")
+ 
+   query = "UPDATE public.domande SET risposta= '" + str(data["risposta"]) + "'"
+  
+   query += " WHERE id_domanda='" + data['id_domanda'] + "';"
+  
+   print("\n")   
+ 
+   print(query)
+ 
+   try:
+       cursor.execute(query)
+       db.commit()
+       status = jsonify('answer update')
+   except psycopg2.IntegrityError as e:
+       status = jsonify('Error: answer not updated - ', str(e))
+   finally:
+       cursor.close()
+   return status
+ 
+ 
+ 
+# Restituisce la lista degli utenti associati al ruolo passato.
+# Importante passare il ruolo giusto per costruire la query corretta.
+# PARAMETRI DA PASSARE: - data - paz_cod_fiscale - dot_cod_fiscale
+@app.route("/dottore/lista_domande", methods = ['GET'])
+#@token_required
+def getlistaDomande():
+   data = request.get_json()
+   cursor = db.cursor()
+   query = "SELECT quesito, risposta, ora FROM public.domande"
+   query += " WHERE paz_cod_fiscale='" + data['paz_cod_fiscale'] + "' AND dot_cod_fiscale='" + data['dot_cod_fiscale'] + "' AND data='" + data['data'] + "' ;"
+   print(query)
+   cursor.execute(query)
+   rows = cursor.fetchall()
+   if rows:
+       jsonOb = {}
+       resp = []
+       for row in rows:
+           print(row)
+           resp.append({"quesito":row[0], "risposta":row[1], "ora":row[2]})
+           print(resp)
+       cursor.close()
+       return json.dumps(resp, default=str)
+   else:
+       resp = jsonify("No user found with " + str(data['paz_cod_fiscale']))
+       return resp
