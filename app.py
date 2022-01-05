@@ -164,19 +164,23 @@ def create_user():
     print("\n")
     if data['role'] == 1 or data['role'] == '1':  # PAZIENTE [1]
         query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat) VALUES ('"
-        query += data["cod_fiscale"] + "', 'paziente', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
+        query += data["cod_fiscale"] + "', 'paziente', " + str(1) + ", '" + data["nome"] + "', '" + data[
+            "cognome"] + "', "
         query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ");"
     elif data['role'] == 2 or data['role'] == '2':  # DOTTORE [2]
         query = "INSERT INTO public.dottore (cod_fiscale, password, role, nome, cognome, num_cellulare, email, specializzazione) VALUES ('"
-        query += data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
+        query += data["cod_fiscale"] + "', 'dottore', " + str(2) + ", '" + data["nome"] + "', '" + data[
+            "cognome"] + "', "
         query += str(data["num_cellulare"]) + ", '" + data["email"] + "', '" + data["specializzazione"] + "');"
     elif data['role'] == 3 or data['role'] == '3':  # VOLONTARIO [3]
         query = "INSERT INTO public.volontario (cod_fiscale, password, role, nome, cognome, num_cellulare, email, ammonizioni) VALUES ('"
-        query += data["cod_fiscale"] + "', 'admin', " + str(3) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
+        query += data["cod_fiscale"] + "', 'familiare', " + str(3) + ", '" + data["nome"] + "', '" + data[
+            "cognome"] + "', "
         query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(0) + ");"
     elif data['role'] == 4 or data['role'] == '4':  # FAMILIARE [4]
         query = "INSERT INTO public.familiare (cod_fiscale, password, role, nome, cognome, num_cellulare, email) VALUES ('"
-        query += data["cod_fiscale"] + "', 'admin', " + str(4) + ", '" + data["nome"] + "', '" + data["cognome"] + "', "
+        query += data["cod_fiscale"] + "', 'volontario', " + str(4) + ", '" + data["nome"] + "', '" + data[
+            "cognome"] + "', "
         query += str(data["num_cellulare"]) + ", '" + data["email"] + "');"
     print("\n")
 
@@ -312,7 +316,7 @@ def get_actors():
     data = request.get_json()
     cursor = db.cursor()
     user = get_role(data['role'])
-    if data['role'] == 1:
+    if data['role'] == 1 or data['role'] == '2':
         try:
             query_fam = "SELECT f.cod_fiscale, f.nome, f.cognome FROM public.familiare_paziente as fp, public.familiare as f "
             query_fam += "WHERE paziente_cod_fiscale='" + data[
@@ -337,7 +341,8 @@ def get_actors():
             return resp
     else:
         try:
-            query = "SELECT paziente_cod_fiscale, dottore_cod_fiscale FROM public.dottore_paziente WHERE dottore_cod_fiscale = '" + data['cod_fiscale'] + "';"
+            query = "SELECT paziente_cod_fiscale, dottore_cod_fiscale FROM public.dottore_paziente WHERE dottore_cod_fiscale = '" + \
+                    data['cod_fiscale'] + "';"
             cursor.execute(query)
             rows = cursor.fetchall()
             print(rows)
@@ -353,8 +358,6 @@ def get_actors():
 
         except psycopg2.IntegrityError as e:
             resp = jsonify('Error: Select not done - ', str(e))
-
-
 
 
 # @app.route("/")
@@ -374,14 +377,9 @@ def create_visita():
     print("\n")
     print(data)
     print("\n")
-    query = "INSERT INTO public.visite (\"id visita\", ora, notifica, data) VALUES ('"
-    query += data["id"] + "', '" + data["ora"] + "', '" + data["notifica"] + "', '" + data["data"] + "');"
-
-    query = "INSERT INTO public." + "visita_paziente (\"id visita\", " + "paziente_cod_fiscale) "
-    query += "VALUES ('" + data["id"] + "', '" + data["paziente_cod_fiscale"] + "');"
-
-    query = "INSERT INTO public." + "visita_dottore (\"id visita\", " + "dottore_cod_fiscale) "
-    query += "VALUES ('" + data["id"] + "', '" + data["dottore_cod_fiscale"] + "');"
+    query = "INSERT INTO public.visite (\"id visita\", ora, notifica, data, cod_fiscale_doc, cod_fiscale_pat) VALUES ('"
+    query += data["id"] + "', '" + data["ora"] + "', '" + data["notifica"] + "', '" + data["data"] + "', '" + data[
+        "cfdottore"] + "', '" + data["cfpaziente"] + "');"
 
     print("\n")
 
