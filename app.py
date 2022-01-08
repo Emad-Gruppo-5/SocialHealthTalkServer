@@ -140,6 +140,10 @@ def getprofilo():
         resp = { "cod_fiscale": rows[0], "role": str(rows[2]), "nome": rows[3], "cognome":rows[4], "num_cellulare": str(rows[5]), "email":rows[6]}
         if data['role']==1:
             resp["tipologia_chat"] = rows[7]
+            resp["eta"] = rows[8]
+            resp["note"] = rows[9]
+            resp["sesso"] = rows[10]
+            resp["titolo_studio"] = rows[11]
         elif data['role']==2:
             resp["specializzazione"] = rows[7]
         elif data['role']==3:
@@ -161,9 +165,9 @@ def create_user():
     print(data)
     print("\n")
     if data['role'] == 1: #PAZIENTE [1]
-        query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat) VALUES ('" 
+        query = "INSERT INTO public.paziente (cod_fiscale, password, role, nome, cognome, num_cellulare, email, tipologia_chat, eta, sesso, titolo_studio) VALUES ('" 
         query += data["cod_fiscale"] + "', 'admin', " + str(1) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
-        query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ");"
+        query += str(data["num_cellulare"]) + ", '" + data["email"] + "', " + str(data["tipologia_chat"]) + ", '" + str(data["eta"]) + "', '" + str(data["sesso"]) + "', '" + str(data["titolo_studio"]) + "');"
     elif data['role'] == 2: #DOTTORE [2]
         query = "INSERT INTO public.dottore (cod_fiscale, password, role, nome, cognome, num_cellulare, email, specializzazione) VALUES ('" 
         query += data["cod_fiscale"] + "', 'admin', " + str(2) + ", '" + data["nome"] + "', '" + data["cognome"] + "', " 
