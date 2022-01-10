@@ -408,10 +408,9 @@ def getvisite():
         cursor.close()
         return resp
 
-
-# Crea domanda per paziente.
-# PARAMETRI DA PASSARE: - quesito, - id_domanda, - ora, - ripeti, - data, - paz_cod_fiscale, - dot_cod_fiscale
-@app.route("/dottore/crea_domanda", methods = ['POST'])
+# Inserisce domanda (fatta dal dottore) e risposta (data dal paziente) nello storico_domande
+# PARAMETRI DA PASSARE: testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore
+@app.route("/aggiungi_domanda", methods = ['POST'])
 #@token_required
 def create_question():
    data = request.get_json()
@@ -419,58 +418,26 @@ def create_question():
    print(data)
    print("\n")
  
-   query = "INSERT INTO public.domande (quesito, id_domanda, ora, ripeti, data, paz_cod_fiscale, dot_cod_fiscale) VALUES ('"
-   query+= data["quesito"] + "', '" + data["id_domanda"] + "', '" + data["ora"] + "', '"
-   query+= data["ripeti"] + "' , '" + data["data"] + "' , '" + data["paz_cod_fiscale"] + "' , '" + data["dot_cod_fiscale"] + "' ); "
+   query = "INSERT INTO public.storico_domande (testo_domanda, testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore) VALUES ('"
+   query+= data["testo_domanda"] + "', '" + data["testo_risposta"] + "', '" + data["data_domanda"] + "', '"
+   query+= data["data_risposta"] + "', '" + data["cod_fiscale_paziente"] + "', '" + data["cod_fiscale_dottore"] + "' ); "
  
    print("\n")   
  
    print(query)
  
    try:
-       cursor.execute(query)
-       db.commit()
-       status = jsonify('domanda inserita')
+       prova = cursor.execute(query)
+       prova2 = db.commit()
+       print(prova)
+       print(prova2)
+       status = make_response(jsonify('domanda inserita'), 200)
    except psycopg2.IntegrityError as e:
-       status = jsonify('Error: domanda not inserted - ', str(e))
+       status = make_response(jsonify('Error: domanda not inserted - ', str(e)), 500)
    finally:
        cursor.close()
    return status
- 
- 
- 
- 
-# Rispondi domanda.
-# PARAMETRI DA PASSARE: - id_domanda, - risposta
-@app.route("/paziente/rispondi_domanda", methods = ['POST'])
-#@token_required
-def ask_askwer():
-   data = request.get_json()
-   cursor = db.cursor()
- 
-   print("\n")
-   print(data)
-   print("\n")
- 
-   query = "UPDATE public.domande SET risposta= '" + str(data["risposta"]) + "'"
-  
-   query += " WHERE id_domanda='" + data['id_domanda'] + "';"
-  
-   print("\n")   
- 
-   print(query)
- 
-   try:
-       cursor.execute(query)
-       db.commit()
-       status = jsonify('answer update')
-   except psycopg2.IntegrityError as e:
-       status = jsonify('Error: answer not updated - ', str(e))
-   finally:
-       cursor.close()
-   return status
- 
- 
+
  
 # Restituisce la lista degli utenti associati al ruolo passato.
 # Importante passare il ruolo giusto per costruire la query corretta.
