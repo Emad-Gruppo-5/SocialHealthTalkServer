@@ -255,7 +255,9 @@ def update_user():
 def associa_attore():
     data = request.get_json()
     cursor = db.cursor()
-    user = get_role(data['role'])
+    
+    user = get_role(int(data['role']))
+    print(("cristo " + role))
     query = "INSERT INTO public." + user + "_paziente (paziente_cod_fiscale, " + user + "_cod_fiscale) "
     query += "VALUES ('" + data['paziente_cod_fiscale'] + "', '" + data["user_cod_fiscale"] + "');"
 
@@ -357,6 +359,7 @@ def get_actors():
         finally:
             cursor.close()
             return resp
+
 
 # Crea una visita.
 @app.route("/dottore/crea_visita", methods=['POST'])
