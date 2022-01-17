@@ -1,6 +1,7 @@
 import base64
 import datetime
 import uuid
+
 from flask import Flask, json, request, jsonify, make_response
 from functools import wraps
 import jwt
@@ -508,7 +509,6 @@ def create_question():
    return status
 
  
-
 # # Inserisce risposta audio.
 # # PARAMETRI DA PASSARE: - audio, - id
 # @app.route('/audiofile', methods=['POST'])
