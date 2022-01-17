@@ -3,6 +3,7 @@ from flask import Flask, json, request, jsonify, make_response
 from functools import wraps
 import jwt
 import psycopg2
+import smtplib
 
 # LEGENDA
 # RUOLI:
@@ -12,6 +13,9 @@ import psycopg2
 #          3 - VOLONTARIO
 #           4 - FAMILIARE
 
+
+gmail_user = 'socialhealthtalkbot@gmail.com'
+gmail_password = 'gruppoemad5'
 
 app = Flask(__name__)
 
