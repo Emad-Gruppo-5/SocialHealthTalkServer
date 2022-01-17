@@ -1,4 +1,7 @@
+import base64
 import datetime
+import uuid
+
 from flask import Flask, json, request, jsonify, make_response
 from functools import wraps
 import jwt
