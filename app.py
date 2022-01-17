@@ -257,7 +257,6 @@ def associa_attore():
     cursor = db.cursor()
     
     user = get_role(int(data['role']))
-    print(("cristo " + role))
     query = "INSERT INTO public." + user + "_paziente (paziente_cod_fiscale, " + user + "_cod_fiscale) "
     query += "VALUES ('" + data['paziente_cod_fiscale'] + "', '" + data["user_cod_fiscale"] + "');"
 
@@ -299,6 +298,67 @@ def rimuovi_associazione():
     finally:
         cursor.close()
     return status
+
+
+
+# Recupera la lista delle domande fatte da un dottore ad un paziente
+# in una certa data
+# PARAMETRI DA PASSARE: - data, - cod_fiscale_paziente, - cod_fiscale_dottore
+@app.route("/lista_domande", methods = ['GET'])
+#@token_required
+def getlistaDomande():
+   data = request.get_json()
+   cursor = db.cursor()
+   query = "SELECT id_domanda, testo_domanda, testo_risposta, file_risposta, data_risposta FROM public.storico_domande"
+   query += " WHERE cod_fiscale_paziente='" + data['cod_fiscale_paziente'] + "' AND cod_fiscale_dottore='" + data['cod_fiscale_dottore'];
+   query += "' AND data_domanda='" + data['data_domanda'] + "' ;"
+   print(query)
+   cursor.execute(query)
+   rows = cursor.fetchall()
+   if rows:
+       jsonOb = {}
+       resp = []
+       for row in rows:
+           print(row)
+           resp.append({"id_domanda":row[0], "testo_domanda":row[1], "testo_risposta":row[2], "file_risposta":row[3], "data_risposta":row[4]})
+           print(resp)
+       cursor.close()
+       return make_response(json.dumps(resp, default=str), 200)
+   else:
+       resp = make_response(jsonify("Nessuna domanda trovata per " + str(data['cod_fiscale_paziente'])), 500)
+       return resp
+
+
+
+# Invia una mail e un sms a tutti i familiari e dottori associati scelti
+# PARAMETRI DA PASSARE: 
+@app.route("/alert", methods = ['POST'])
+#@token_required
+def sendAlerts():
+    data = request.get_json()
+    print(data)
+    to = [] # è possibile inserire in to ["email1", "email2", ..]
+    for val in data:
+        to.append(val["email"])
+    print(to)
+    subject = "ALERT"
+    body = "ALERT ALERT ALERT\nFUNZIONA"
+    email_text = """\
+    From: %s
+    To: %s
+    Subject: %s
+
+    %s
+    """ % (gmail_user, ", ".join(to), subject, body)
+    try:
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.ehlo()
+        smtp_server.login(gmail_user, gmail_password)
+        smtp_server.sendmail(gmail_user, to, email_text)
+        smtp_server.close()
+        return make_response("Email sent successfully!", 200)
+    except Exception as ex:
+        return make_response("Something went wrong: " + ex, 500)
 
 
 
@@ -442,31 +502,6 @@ def create_question():
    return status
 
  
-# Restituisce la lista degli utenti associati al ruolo passato.
-# Importante passare il ruolo giusto per costruire la query corretta.
-# PARAMETRI DA PASSARE: - data - paz_cod_fiscale - dot_cod_fiscale
-@app.route("/dottore/lista_domande", methods = ['GET'])
-#@token_required
-def getlistaDomande():
-   data = request.get_json()
-   cursor = db.cursor()
-   query = "SELECT quesito, risposta, ora FROM public.domande"
-   query += " WHERE paz_cod_fiscale='" + data['paz_cod_fiscale'] + "' AND dot_cod_fiscale='" + data['dot_cod_fiscale'] + "' AND data='" + data['data'] + "' ;"
-   print(query)
-   cursor.execute(query)
-   rows = cursor.fetchall()
-   if rows:
-       jsonOb = {}
-       resp = []
-       for row in rows:
-           print(row)
-           resp.append({"quesito":row[0], "risposta":row[1], "ora":row[2]})
-           print(resp)
-       cursor.close()
-       return json.dumps(resp, default=str)
-   else:
-       resp = jsonify("No user found with " + str(data['paz_cod_fiscale']))
-       return resp
 
 # Inserisce risposta audio.
 # PARAMETRI DA PASSARE: - audio, - id
