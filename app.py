@@ -1,6 +1,7 @@
 import base64
 import datetime
 import uuid
+
 from flask import Flask, json, request, jsonify, make_response
 from functools import wraps
 import jwt
@@ -510,7 +511,7 @@ def create_question():
  
 
 # Inserisce risposta audio.
-# PARAMETRI DA PASSARE: - audio, - id
+# PARAMETRI DA PASSARE: - audio, - id, - date
 @app.route('/audiofile', methods=['POST'])
 def rispostaDomandeAudio():
     content = request.get_json(silent=True)
@@ -521,7 +522,7 @@ def rispostaDomandeAudio():
     with open(namefile + ".webm", "wb") as fh:
         fh.write(base64.b64decode(ans))
     query = "UPDATE public.storico_domande SET audio='" + content[
-        "audio"] + "'"
+        "audio"] + "', data_risposta='" + content["date"] + "'"
 
     query += " WHERE id_domanda='" + content['id'] + "';"
 
@@ -543,7 +544,7 @@ def rispostaDomandeAudio():
 
 
 # Inserisce risposta testuale.
-# PARAMETRI DA PASSARE: - role, - risposta, - idDomanda
+# PARAMETRI DA PASSARE: - role, - risposta, - idDomanda. - date
 @app.route("/textrisposta", methods=['POST'])
 # @token_required
 def rispostaDomandeTesto():
@@ -555,7 +556,7 @@ def rispostaDomandeTesto():
     print("\n")
 
     query = "UPDATE public.storico_domande SET testo_risposta='" + data[
-        "risposta"] + "'"
+        "risposta"] + "', data_risposta='" + data["date"] + "'"
 
     query += " WHERE id_domanda='" + data['id'] + "';"
 
