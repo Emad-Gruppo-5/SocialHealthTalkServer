@@ -467,3 +467,67 @@ def getlistaDomande():
    else:
        resp = jsonify("No user found with " + str(data['paz_cod_fiscale']))
        return resp
+
+# Inserisce risposta audio.
+# PARAMETRI DA PASSARE: - audio, - id
+@app.route('/audiofile', methods=['POST'])
+def rispostaDomandeAudio():
+    content = request.get_json(silent=True)
+    print(type(content["audio"])) #This is type string
+    ans = base64.b64encode(bytes(content["audio"], 'utf-8'))
+    print(type(ans)) #This is type bytes
+    namefile = uuid.uuid4()
+    with open(namefile + ".webm", "wb") as fh:
+        fh.write(base64.b64decode(ans))
+    query = "UPDATE public.storico_domande SET audio='" + content[
+        "audio"] + "'"
+
+    query += " WHERE id_domanda='" + content['id'] + "';"
+
+    print("\n")
+
+    print(query)
+    
+    cursor = db.cursor()
+
+    try:
+        cursor.execute(query)
+        db.commit()
+        status = jsonify('User updated')
+    except psycopg2.IntegrityError as e:
+        status = jsonify('Error: User not updated - ', str(e))
+    finally:
+        cursor.close()
+    return status
+
+
+# Inserisce risposta testuale.
+# PARAMETRI DA PASSARE: - role, - risposta, - idDomanda
+@app.route("/textrisposta", methods=['POST'])
+# @token_required
+def rispostaDomandeTesto():
+    data = request.get_json()
+    cursor = db.cursor()
+    user = get_role(data['role'])
+    print("\n")
+    print(data)
+    print("\n")
+
+    query = "UPDATE public.storico_domande SET testo_risposta='" + data[
+        "risposta"] + "'"
+
+    query += " WHERE id_domanda='" + data['id'] + "';"
+
+    print("\n")
+
+    print(query)
+
+    try:
+        cursor.execute(query)
+        db.commit()
+        status = jsonify('User updated')
+    except psycopg2.IntegrityError as e:
+        status = jsonify('Error: User not updated - ', str(e))
+    finally:
+        cursor.close()
+    return status
