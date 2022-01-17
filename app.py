@@ -316,7 +316,7 @@ def rimuovi_associazione():
 def getlistaDomande():
    data = request.get_json()
    cursor = db.cursor()
-   query = "SELECT id_domanda, testo_domanda, testo_risposta, file_risposta, data_risposta FROM public.storico_domande"
+   query = "SELECT id_domanda, testo_domanda, testo_risposta, audio_risposta, data_risposta FROM public.storico_domande"
    query += " WHERE cod_fiscale_paziente='" + data['cod_fiscale_paziente'] + "' AND cod_fiscale_dottore='" + data['cod_fiscale_dottore'];
    query += "' AND data_domanda='" + data['data_domanda'] + "' ;"
    print(query)
@@ -327,7 +327,7 @@ def getlistaDomande():
        resp = []
        for row in rows:
            print(row)
-           resp.append({"id_domanda":row[0], "testo_domanda":row[1], "testo_risposta":row[2], "file_risposta":row[3], "data_risposta":row[4]})
+           resp.append({"id_domanda":row[0], "testo_domanda":row[1], "testo_risposta":row[2], "audio_risposta":row[3], "data_risposta":row[4]})
            print(resp)
        cursor.close()
        return make_response(json.dumps(resp, default=str), 200)
