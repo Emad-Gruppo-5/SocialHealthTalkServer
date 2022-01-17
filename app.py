@@ -311,14 +311,14 @@ def rimuovi_associazione():
 # Recupera la lista delle domande fatte da un dottore ad un paziente
 # in una certa data
 # PARAMETRI DA PASSARE: - data, - cod_fiscale_paziente, - cod_fiscale_dottore
-@app.route("/lista_domande", methods = ['GET'])
+@app.route("/lista_domande", methods = ['POST'])
 #@token_required
 def getlistaDomande():
    data = request.get_json()
    cursor = db.cursor()
    query = "SELECT id_domanda, testo_domanda, testo_risposta, audio_risposta, data_risposta FROM public.storico_domande"
    query += " WHERE cod_fiscale_paziente='" + data['cod_fiscale_paziente'] + "' AND cod_fiscale_dottore='" + data['cod_fiscale_dottore'];
-   query += "' AND data_domanda='" + data['data_domanda'] + "' ;"
+   query += "' AND data_query='" + data['data_query'] + "' ;"
    print(query)
    cursor.execute(query)
    rows = cursor.fetchall()
@@ -478,6 +478,9 @@ def getvisite():
         cursor.close()
         return resp
 
+
+    
+
 # Inserisce domanda (fatta dal dottore) e risposta (data dal paziente) nello storico_domande
 # PARAMETRI DA PASSARE: testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore
 @app.route("/aggiungi_domanda", methods = ['POST'])
@@ -488,9 +491,9 @@ def create_question():
    print(data)
    print("\n")
  
-   query = "INSERT INTO public.storico_domande (testo_domanda, testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore, audio) VALUES ('"
+   query = "INSERT INTO public.storico_domande (testo_domanda, testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore, audio_risposta) VALUES ('"
    query+= data["testo_domanda"] + "', '" + data["testo_risposta"] + "', '" + data["data_domanda"] + "', '"
-   query+= data["data_risposta"] + "', '" + data["cod_fiscale_paziente"] + "', '" + data["cod_fiscale_dottore"] + "', audio='"+ data["audio"] + "'); "
+   query+= data["data_risposta"] + "', '" + data["cod_fiscale_paziente"] + "', '" + data["cod_fiscale_dottore"] + "', '"+ data["audio_risposta"] + "'); "
  
    print("\n")   
  
