@@ -491,9 +491,10 @@ def create_question():
    print(data)
    print("\n")
  
-   query = "INSERT INTO public.storico_domande (testo_domanda, testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore, audio_risposta) VALUES ('"
+   query = "INSERT INTO public.storico_domande (testo_domanda, testo_risposta, data_domanda, data_risposta, cod_fiscale_paziente, cod_fiscale_dottore, audio_risposta, data_query) VALUES ('"
    query+= data["testo_domanda"] + "', '" + data["testo_risposta"] + "', '" + data["data_domanda"] + "', '"
-   query+= data["data_risposta"] + "', '" + data["cod_fiscale_paziente"] + "', '" + data["cod_fiscale_dottore"] + "', '"+ data["audio_risposta"] + "'); "
+   query+= data["data_risposta"] + "', '" + data["cod_fiscale_paziente"] + "', '" + data["cod_fiscale_dottore"] + "', '"+ data["audio_risposta"] + "','"
+   query+= data["data_query"] + "'); "
  
    print("\n")   
  
