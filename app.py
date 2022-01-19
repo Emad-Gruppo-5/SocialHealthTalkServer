@@ -147,10 +147,10 @@ def getprofilo():
         resp = { "cod_fiscale": rows[0], "role": str(rows[2]), "nome": rows[3], "cognome":rows[4], "num_cellulare": str(rows[5]), "email":rows[6]}
         if data['role']==1:
             resp["tipologia_chat"] = rows[7]
-            resp["eta"] = rows[8]
-            resp["note"] = rows[9]
-            resp["sesso"] = rows[10]
-            resp["titolo_studio"] = rows[11]
+            resp["eta"] = rows[11]
+            resp["note"] = rows[8]
+            resp["sesso"] = rows[9]
+            resp["titolo_studio"] = rows[10]
         elif data['role']==2:
             resp["specializzazione"] = rows[7]
         elif data['role']==3:
@@ -512,6 +512,9 @@ def create_question():
        cursor.close()
    return status
 
+@app.route("/funziona", methods = ['GET'])
+def funzzzz():
+    return "Ciao Emanuele"
  
 # # Inserisce risposta audio.
 # # PARAMETRI DA PASSARE: - audio, - id
