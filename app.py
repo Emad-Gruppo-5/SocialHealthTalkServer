@@ -1,7 +1,7 @@
 import base64
 import datetime
 import uuid
-
+from twilio.rest import Client
 from flask import Flask, json, request, jsonify, make_response
 from functools import wraps
 import jwt
@@ -18,7 +18,14 @@ import smtplib
 
 
 gmail_user = 'socialhealthtalkbot@gmail.com'
-gmail_password = 'gruppoemad5'
+gmail_password = '%91tyPqwDqQmnOP54$Ll'
+
+account_sid = 'AC2b451648faf4f3f113cc8183cf0ce397'
+auth_token = '97fd25ab022a4c25fe34320880c43263'
+
+twilio_number = '+17853776537'
+
+client = Client(account_sid, auth_token)
 
 app = Flask(__name__)
 
@@ -316,7 +323,7 @@ def rimuovi_associazione():
 def getlistaDomande():
    data = request.get_json()
    cursor = db.cursor()
-   query = "SELECT id_domanda, testo_domanda, testo_risposta, audio_risposta, data_risposta FROM public.storico_domande"
+   query = "SELECT id_domanda, testo_domanda, testo_risposta, audio_risposta, data_risposta, data_domanda FROM public.storico_domande"
    query += " WHERE cod_fiscale_paziente='" + data['cod_fiscale_paziente'] + "' AND cod_fiscale_dottore='" + data['cod_fiscale_dottore'];
    query += "' AND data_query='" + data['data_query'] + "' ;"
    print(query)
@@ -327,7 +334,7 @@ def getlistaDomande():
        resp = []
        for row in rows:
            print(row)
-           resp.append({"id_domanda":row[0], "testo_domanda":row[1], "testo_risposta":row[2], "audio_risposta":row[3], "data_risposta":row[4]})
+           resp.append({"id_domanda":row[0], "testo_domanda":row[1], "testo_risposta":row[2], "audio_risposta":row[3], "data_risposta":row[4], "data_domanda": row[5]})
            print(resp)
        cursor.close()
        return make_response(json.dumps(resp, default=str), 200)
@@ -344,26 +351,14 @@ def getlistaDomande():
 def sendAlerts():
     data = request.get_json()
     print(data)
-    to = [] # è possibile inserire in to ["email1", "email2", ..]
-    for val in data:
-        to.append(val["email"])
-    print(to)
-    subject = "ALERT"
-    body = "ALERT ALERT ALERT\nFUNZIONA"
-    email_text = """\
-    From: %s
-    To: %s
-    Subject: %s
-
-    %s
-    """ % (gmail_user, ", ".join(to), subject, body)
     try:
-        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        smtp_server.ehlo()
-        smtp_server.login(gmail_user, gmail_password)
-        smtp_server.sendmail(gmail_user, to, email_text)
-        smtp_server.close()
-        return make_response("Email sent successfully!", 200)
+        for val in data["num_cellulare"]:
+            client.api.account.messages.create(
+                body = "ALERT: Il paziente " + data["nome"] + " " + data["cognome"] + " ha effettuato l'ultimo accesso in data " + data["ultimo_accesso"],
+                from_ = twilio_number,
+                to = val
+            )
+        return make_response("Sms sent successfully!", 200)
     except Exception as ex:
         return make_response("Something went wrong: " + ex, 500)
 
@@ -384,24 +379,24 @@ def get_actors():
 
     if data['role']==1:
         try:
-            query_fam = "SELECT f.cod_fiscale, f.nome, f.cognome FROM public.familiare_paziente as fp, public.familiare as f "
+            query_fam = "SELECT f.cod_fiscale, f.nome, f.cognome, f.num_cellulare FROM public.familiare_paziente as fp, public.familiare as f "
             query_fam += "WHERE paziente_cod_fiscale='" + data['cod_fiscale'] + "' AND fp.familiare_cod_fiscale = f.cod_fiscale;"
             print(query_fam + "\n")
             cursor.execute(query_fam)
             familiari=[]
             for row in cursor.fetchall():
-                familiari.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
+                familiari.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2], "num_cellulare":row[3]})
                 
             print(familiari)
             resp["familiari"] = familiari 
             
-            query_dot = "SELECT d.cod_fiscale, d.nome, d.cognome FROM public.dottore_paziente as dp, public.dottore as d "
+            query_dot = "SELECT d.cod_fiscale, d.nome, d.cognome, d.num_cellulare FROM public.dottore_paziente as dp, public.dottore as d "
             query_dot += "WHERE paziente_cod_fiscale='" + data['cod_fiscale'] + "' AND dp.dottore_cod_fiscale = d.cod_fiscale;"
             print(query_dot + "\n")
             cursor.execute(query_dot)
             dottori=[]
             for row in cursor.fetchall():
-                dottori.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2]})
+                dottori.append({"cod_fiscale":row[0], "nome":row[1], "cognome":row[2], "num_cellulare":row[3]})
             resp["dottori"] = dottori
             print(resp)
             
@@ -516,66 +511,70 @@ def create_question():
 def funzzzz():
     return "Ciao Emanuele"
  
-# # Inserisce risposta audio.
-# # PARAMETRI DA PASSARE: - audio, - id
-# @app.route('/audiofile', methods=['POST'])
-# def rispostaDomandeAudio():
-#     content = request.get_json(silent=True)
-#     print(type(content["audio"])) #This is type string
-#     ans = base64.b64encode(bytes(content["audio"], 'utf-8'))
-#     print(type(ans)) #This is type bytes
-#     namefile = uuid.uuid4()
-#     with open(namefile + ".webm", "wb") as fh:
-#         fh.write(base64.b64decode(ans))
-#     query = "UPDATE public.storico_domande SET audio='" + content[
-#         "audio"] + "'"
 
-#     query += " WHERE id_domanda='" + content['id'] + "';"
-
-#     print("\n")
-
-#     print(query)
+@app.route("/elimina_domanda", methods = ['POST'])
+def elimina_domanda():
+    data = request.get_json()
+    cursor = db.cursor()
     
-#     cursor = db.cursor()
+    query = "DELETE FROM public.storico_domande WHERE id_domanda=" + str(data["id_domanda"]) + ";"
+    
 
-#     try:
-#         cursor.execute(query)
-#         db.commit()
-#         status = jsonify('User updated')
-#     except psycopg2.IntegrityError as e:
-#         status = jsonify('Error: User not updated - ', str(e))
-#     finally:
-#         cursor.close()
-#     return status
+    print("\n")
+
+    print(query)
+
+    try:
+        cursor.execute(query)
+        db.commit()
+        status = make_response("Domanda cancellata con successo", 200)
+    except psycopg2.IntegrityError as e:
+        status = make_response("Errore: " + str(e), 500)
+    finally:
+        cursor.close()
+    return status
 
 
-# # Inserisce risposta testuale.
-# # PARAMETRI DA PASSARE: - role, - risposta, - idDomanda
-# @app.route("/textrisposta", methods=['POST'])
-# # @token_required
-# def rispostaDomandeTesto():
-#     data = request.get_json()
-#     cursor = db.cursor()
-#     user = get_role(data['role'])
-#     print("\n")
-#     print(data)
-#     print("\n")
+@app.route("/recupera_password", methods = ['POST'])
+def recupera_password():
+    data = request.get_json()
+    role=1
+    row=None
+    print("\n\nDATI:\n" + str(data))
+    cod_fiscale = data["cod_fiscale"]
+    cursor = db.cursor()
 
-#     query = "UPDATE public.storico_domande SET testo_risposta='" + data[
-#         "risposta"] + "'"
+    while not row:
+        user = get_role(role)
+        query = "SELECT email, password FROM public." + user + " WHERE cod_fiscale='" + cod_fiscale + "';"
+        print(query)
+        cursor.execute(query)
+        row = cursor.fetchone()
+        print("\nROW:\n",row)
+        role+=1
+        if row:
+            resp = {}
+            resp["email"] = row[0]
+            resp["password"] =  row[1]
 
-#     query += " WHERE id_domanda='" + data['id'] + "';"
+            cursor.close()
+            print(json.dumps(resp))
 
-#     print("\n")
+            subject = "ALERT"
+            body = "Password associata all'utente " + data["cod_fiscale"] + ": " + resp["password"]
+            email_text = """\
+            From: %s
+            To: %s
+            Subject: %s
 
-#     print(query)
-
-#     try:
-#         cursor.execute(query)
-#         db.commit()
-#         status = jsonify('User updated')
-#     except psycopg2.IntegrityError as e:
-#         status = jsonify('Error: User not updated - ', str(e))
-#     finally:
-#         cursor.close()
-#     return status
+            %s
+            """ % (gmail_user, ", ".join([resp["email"]]), subject, body)
+            try:
+                smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                smtp_server.ehlo()
+                smtp_server.login(gmail_user, gmail_password)
+                smtp_server.sendmail(gmail_user, resp["email"], email_text)
+                smtp_server.close()
+                return make_response("Email sent successfully!", 200)
+            except Exception as ex:
+                return make_response("Something went wrong: " + str(ex), 500)
