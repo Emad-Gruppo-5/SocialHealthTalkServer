@@ -239,7 +239,7 @@ def update_user():
     print(data)
     print("\n")
 
-    query = "UPDATE public." + user + " SET num_cellulare=" + str(data["num_cellulare"]) + ", email='" + data["email"] + "'"  
+    query = "UPDATE public." + user + " SET num_cellulare='" + str(data["num_cellulare"]) + "', email='" + data["email"] + "'"  
 
     if data['role']==1: #PAZIENTE [1]
         query += ", tipologia_chat=" + str(data["tipologia_chat"]) 
@@ -513,6 +513,7 @@ def funzzzz():
  
 
 @app.route("/elimina_domanda", methods = ['POST'])
+#@token_required
 def elimina_domanda():
     data = request.get_json()
     cursor = db.cursor()
@@ -536,6 +537,7 @@ def elimina_domanda():
 
 
 @app.route("/recupera_password", methods = ['POST'])
+#@token_required
 def recupera_password():
     data = request.get_json()
     role=1
@@ -578,3 +580,29 @@ def recupera_password():
                 return make_response("Email sent successfully!", 200)
             except Exception as ex:
                 return make_response("Something went wrong: " + str(ex), 500)
+
+
+@app.route("/updateNotes", methods = ['POST'])
+#@token_required
+def updateNotes():
+    data = request.get_json()
+    cursor = db.cursor()
+    print("\n")
+    print(data)
+    print("\n")
+ 
+    query = "UPDATE public.paziente SET note='" + str(data["note"]) + "' WHERE cod_fiscale='" + data['cod_fiscale'] + "';"  
+   
+    print("\n")    
+ 
+    print(query)
+ 
+    try:
+        cursor.execute(query)
+        db.commit()
+        status = make_response(jsonify('note aggiornate'), 200)
+    except psycopg2.IntegrityError as e:
+        status = make_response(jsonify('Error: note not updated - ', str(e)), 500)
+    finally:
+        cursor.close()
+    return status
