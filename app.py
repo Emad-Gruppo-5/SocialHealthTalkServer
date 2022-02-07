@@ -606,3 +606,35 @@ def updateNotes():
     finally:
         cursor.close()
     return status
+
+# parametri: codice fiscale paziente, codice fiscale dottore e data della domanda
+@app.route("/getAnalisi", methods = ['POST'])
+def getAnalisi():
+    data = request.get_json()
+    cursor = db.cursor()
+    print("\n")
+    print(data)
+    print("\n")
+
+    query = "SELECT * FROM public.storico_domande "
+    query += "WHERE cod_fiscale_paziente='" + data['cod_fiscale_paziente'] + "' "
+    query += "AND cod_fiscale_dottore='" + data['cod_fiscale_dottore'] + "' "
+    query += "AND data_domanda='" + data['data'] + "';"
+
+    print("\n")    
+ 
+    print(query)
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    if rows:
+       resp = []
+       for row in rows:
+           print(row)
+           resp.append({ "testo_domanda": row[1], "data_domanda": row[2], "data_risposta": row[3], "humor": row[6] })
+           print(resp)
+       cursor.close()
+       return make_response(json.dumps(resp, default = str), 200)
+    else:
+       resp = make_response(jsonify("Nessuna analisi trovata per il giorno selezionato"), 201)
+       return resp
