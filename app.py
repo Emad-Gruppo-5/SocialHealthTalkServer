@@ -523,7 +523,7 @@ def create_question():
             cursor.execute(query)
             row = cursor.fetchone()
             storage.child(data["audio_risposta"]).download(
-                "C:\\Users\\loren\\Desktop\\scheduler_analisi\\env\\audio_patients\\" + str(row[0]) + ".wav")
+                "*\\Desktop\\scheduler_analisi\\env\\audio_patients\\" + str(row[0]) + ".wav")
 
         status = make_response(jsonify('domanda inserita'), 200)
     except psycopg2.IntegrityError as e:
