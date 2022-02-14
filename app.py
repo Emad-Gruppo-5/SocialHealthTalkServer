@@ -32,7 +32,7 @@ gmail_password = '%91tyPqwDqQmnOP54$Ll'
 account_sid = 'AC2b451648faf4f3f113cc8183cf0ce397'
 auth_token = '97fd25ab022a4c25fe34320880c43263'
 
-twilio_number = '+11111111'
+twilio_number = '+17853776537'
 
 client = Client(account_sid, auth_token)
 
@@ -523,7 +523,7 @@ def create_question():
             cursor.execute(query)
             row = cursor.fetchone()
             storage.child(data["audio_risposta"]).download(
-                "*\\Desktop\\scheduler_analisi\\env\\audio_patients\\" + str(row[0]) + ".wav")
+                "C:\\Users\\loren\\Desktop\\scheduler_analisi\\env\\audio_patients\\" + str(row[0]) + ".wav")
 
         status = make_response(jsonify('domanda inserita'), 200)
     except psycopg2.IntegrityError as e:
